@@ -61,7 +61,10 @@ const LoginPage = () => {
     <div>
       <Header />
       <div className="flex flex-col items-center justify-center h-screen bg-green-200">
-        <form className="flex-col flex w-60 mx-auto items-center">
+        <form
+          className="flex-col flex w-60 mx-auto items-center"
+          id="loginForm"
+        >
           <h2 className="mb-4 text-2xl font-bold">
             {isRegister ? "Register Form" : "Login Form"}
           </h2>

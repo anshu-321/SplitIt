@@ -11,7 +11,7 @@ const Dashboard = () => {
     if (id === undefined || id === null) {
       navigate("/login");
     }
-  }, [navigate]);
+  }, []);
 
   return (
     <div>

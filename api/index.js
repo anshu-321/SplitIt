@@ -34,7 +34,7 @@ app.post("/login", async (req, res) => {
       const passMatch = bcrypt.compareSync(password, findUser.password);
       if (passMatch) {
         jwt.sign(
-          { userId: findUser._id, username },
+          { userId: findUser._id, username, name: findUser.name },
           jwtSecret,
           {},
           (err, token) => {
@@ -42,6 +42,7 @@ app.post("/login", async (req, res) => {
             res.cookie("token", token).json({
               id: findUser._id,
               username: findUser.username,
+              name: findUser.name,
             });
           }
         );
@@ -70,13 +71,15 @@ app.post("/register", async (req, res) => {
     });
 
     jwt.sign(
-      { userId: createdUser._id, username },
+      { userId: createdUser._id, username, name: createdUser.name },
       jwtSecret,
       {},
       (err, token) => {
         if (err) throw err;
         res.cookie("token", token).status(201).json({
           id: createdUser._id,
+          name: createdUser.name,
+          username: createdUser.username,
         });
       }
     );
@@ -94,7 +97,7 @@ app.get("/profile", (req, res) => {
       res.json(userData);
     });
   } else {
-    res.status(401).json("No token");
+    res.json("No token");
   }
 });
 

@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../UserContext";
 
 const Header = () => {
+  const { name } = useContext(UserContext);
   const navigate = useNavigate();
   const onLogo = () => {
     navigate("/");
@@ -44,13 +46,17 @@ const Header = () => {
               </a>
             </div>
           )}
-
-          <Link
-            to="/login"
-            className="hover:underline cursor-pointer bg-amber-600 py-2 px-4 rounded-lg  hover:bg-amber-500 transition-colors"
-          >
-            Login
-          </Link>
+          {name && (
+            <div className=" bg-amber-600 py-2 px-4 rounded-lg">{name}</div>
+          )}
+          {(name === undefined || name === null) && (
+            <Link
+              to="/login"
+              className="hover:underline cursor-pointer bg-amber-600 py-2 px-4 rounded-lg  hover:bg-amber-500 transition-colors"
+            >
+              Login
+            </Link>
+          )}
         </nav>
       </div>
     </header>
