@@ -144,4 +144,28 @@ app.post("/create-group", async (req, res) => {
   }
 });
 
+// - ---------------- FETCHING THE GROUPS BASED ON USERNAME -------------------
+app.get("/groups/user/:username", async (req, res) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if (err) return res.status(401).json({ message: "Unauthorized" });
+
+    const { username } = req.params;
+
+    if (username !== userData.username) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    try {
+      const groups = await Group.find({ members: username });
+      res.json(groups);
+    } catch (err) {
+      console.log("Error fetching groups for given user:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+});
+
 const server = app.listen(4000);
