@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 const cookieParser = require("cookie-parser");
 const User = require("./models/User");
 const jwt = require("jsonwebtoken");
+const Group = require("./models/Group");
 
 dotenv.config();
 mongoose
@@ -103,6 +104,44 @@ app.get("/profile", (req, res) => {
 
 app.get("/test", (req, res) => {
   res.json("Hello World");
+});
+
+//----------------CREATING GROUP ------------------
+//checking if the username exists in the User Database
+app.get("/check-username/:username", async (req, res) => {
+  const { username } = req.params;
+  try {
+    const exists = await User.exists({ username });
+    res.json({ exists: !!exists });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//creating a group and checking if the group already exists
+app.post("/create-group", async (req, res) => {
+  const { name, description, status, members, createdBy } = req.body;
+
+  try {
+    const existingGroup = await Group.findOne({ name, createdBy });
+    if (existingGroup) {
+      return res
+        .status(400)
+        .json({ message: "Group with this name already exists" });
+    }
+
+    const group = await Group.create({
+      name,
+      description,
+      status,
+      members,
+      createdBy,
+    });
+    res.status(201).json({ message: "Group created successfully", group });
+  } catch (err) {
+    console.error("Error creating group:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 const server = app.listen(4000);

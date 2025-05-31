@@ -47,7 +47,15 @@ const Header = () => {
             </div>
           )}
           {name && (
-            <div className=" bg-amber-600 py-2 px-4 rounded-lg">{name}</div>
+            <div className="flex gap-4 text-lg items-center">
+              <Link
+                to="/dashboard"
+                className="hover:underline cursor-pointer bg-amber-600 py-2 px-4 rounded-lg hover:bg-amber-500 transition-colors"
+              >
+                Dashboard
+              </Link>
+              <div className=" bg-blue-500 py-2 px-4 rounded-lg">{name}</div>
+            </div>
           )}
           {(name === undefined || name === null) && (
             <Link
