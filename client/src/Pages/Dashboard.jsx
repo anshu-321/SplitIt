@@ -39,10 +39,10 @@ const Dashboard = () => {
   }, [username]);
 
   return (
-    <div>
+    <div className="bg-amber-600 min-h-screen bg-repeat">
       <Header />
-      <div className="h-screen bg-amber-600 p-6">
-        <div className="max-w-6xl mx-auto pt-24 pb-6">
+      <div className="h-screen bg-amber-600 px-6 w-max-4xl mx-auto">
+        <div className="max-w-6xl mx-auto flex flex-col px-6 pb-4 pt-28">
           <h1 className="text-3xl font-bold text-white mb-4">Dashboard</h1>
           <p className="text-lg text-white">
             Welcome, {name ? name : "User"}! This is your dashboard.
@@ -59,10 +59,11 @@ const Dashboard = () => {
           </Link>
         </div>
 
-        <div className="w-full flex mx-auto overflow-x-auto gap-6 px-4 pb-4 snap-x snap-mandatory scroll-smooth mt-6">
+        <div className="max-w-6xl mx-auto flex gap-6 px-6 pb-4 scroll-smooth mt-6">
           {userGroups && userGroups.length > 0 ? (
             userGroups.map((group) => (
-              <div
+              <Link
+                to={"/group/" + group._id}
                 key={group._id}
                 className="w-48 h-48 bg-white rounded-lg shadow-md p-6 snap-start flex flex-col justify-between hover:shadow-lg transition-shadow duration-300"
               >
@@ -78,7 +79,7 @@ const Dashboard = () => {
                     Created by: {group.createdBy}
                   </p>
                 </div>
-              </div>
+              </Link>
             ))
           ) : (
             <div className="w-full flex justify-center items-center">
@@ -92,9 +93,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-{
-  /* <div className="w-48 h-48 mx-auto mt-6 bg-white rounded-lg shadow-md p-6">
-          //   <h2 className="text-xl font-bold mb-4">Your Expenses</h2>
-          //   <p className="text-gray-600">No expenses recorded yet.</p>
-          // </div> */
-}

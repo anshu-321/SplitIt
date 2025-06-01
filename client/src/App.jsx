@@ -5,6 +5,8 @@ import Dashboard from "./Pages/Dashboard";
 import axios from "axios";
 import { UserContextProvider } from "./UserContext";
 import CreateGroup from "./Pages/CreateGroup";
+import GroupExpensePage from "./Pages/GroupExpensePage";
+import CreateTransaction from "./Pages/CreateTransaction";
 axios.defaults.withCredentials = true; // Enable sending cookies with requests
 
 function App() {
@@ -16,6 +18,11 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/group" element={<CreateGroup />} />
+          <Route path="/group/:groupId" element={<GroupExpensePage />} />
+          <Route
+            path="/group/:groupId/transaction"
+            element={<CreateTransaction />}
+          />
           <Route path="*" element={<LandingPage />} />
         </Routes>
       </Router>

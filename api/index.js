@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const User = require("./models/User");
 const jwt = require("jsonwebtoken");
 const Group = require("./models/Group");
+const Transaction = require("./models/Transaction");
 
 dotenv.config();
 mongoose
@@ -166,6 +167,72 @@ app.get("/groups/user/:username", async (req, res) => {
       res.status(500).json({ message: "Internal server error" });
     }
   });
+});
+
+// - ---------------- FETCHING THE GROUPS BASED ON GROUP ID -------------------
+app.get("/group/:groupId", async (req, res) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if (err) return res.status(401).json({ message: "Unauthorized" });
+  });
+
+  try {
+    const group = await Group.findById(req.params.groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    res.json(group);
+    // console.log("Group fetched successfully:", group);
+  } catch (err) {
+    console.error("Error fetching group by ID:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+//------------------ CREATING A TRANSACTION -------------------
+app.post("/create-transaction", async (req, res) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if (err) return res.status(401).json({ message: "Unauthorized" });
+  });
+  const { groupId, paidBy, amount, description, splitBetween } = req.body;
+  try {
+    const newTransaction = await Transaction.create({
+      groupId,
+      paidBy,
+      amount,
+      description,
+      splitBetween,
+    });
+    res.status(201).json(newTransaction);
+  } catch (err) {
+    console.error("Error creating transaction:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/transactions/group/:groupId", async (req, res) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if (err) return res.status(401).json({ message: "Unauthorized" });
+  });
+  const { groupId } = req.params;
+  try {
+    const transactions = await Transaction.find({ groupId });
+    // if (!transactions || transactions.length === 0) {
+    //   return res
+    //     .status(404)
+    //     .json({ message: "No transactions found for this group" });
+    // }
+    res.json(transactions);
+    console.log("Transactions fetched successfully:", transactions);
+  } catch (err) {
+    console.error("Error fetching transactions:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 const server = app.listen(4000);
