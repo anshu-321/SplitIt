@@ -23,6 +23,27 @@ const TransactionSchema = new mongoose.Schema(
       type: [String], // usernames
       required: true,
     },
+    category: {
+      type: String,
+      enum: [
+        "Food & Dining",
+        "Entertainment",
+        "Travel",
+        "Party/Events",
+        "Gifts",
+        "Groceries",
+        "Utilities",
+        "Rent",
+        "Household Supplies",
+        "Cleaning Services",
+        "Medical",
+        "Education",
+        "Transportation",
+        "Miscellaneous",
+      ],
+      default: "Miscellaneous",
+      required: true,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

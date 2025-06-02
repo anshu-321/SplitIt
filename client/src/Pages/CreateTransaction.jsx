@@ -13,6 +13,24 @@ const CreateTransaction = () => {
   const [description, setDescription] = useState("");
   const [splitBetween, setSplitBetween] = useState([]);
   const navigate = useNavigate();
+  const [category, setCategory] = useState("Miscellaneous");
+
+  const categories = [
+    "Food & Dining",
+    "Entertainment",
+    "Travel",
+    "Party/Events",
+    "Gifts",
+    "Groceries",
+    "Utilities",
+    "Rent",
+    "Household Supplies",
+    "Cleaning Services",
+    "Medical",
+    "Education",
+    "Transportation",
+    "Miscellaneous",
+  ];
 
   useEffect(() => {
     // Fetch group details to get member list
@@ -42,6 +60,7 @@ const CreateTransaction = () => {
           amount: parseFloat(amount),
           description,
           splitBetween,
+          category,
         },
         { withCredentials: true }
       );
@@ -80,6 +99,20 @@ const CreateTransaction = () => {
           >
             <option value="">Select paidBy</option>
             {groupMembers.map((member) => (
+              <option key={member} value={member}>
+                {member}
+              </option>
+            ))}
+          </select>
+
+          <label className="block">Category:</label>
+          <select
+            className="w-full p-2 border rounded"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="">Select Category</option>
+            {categories.map((member) => (
               <option key={member} value={member}>
                 {member}
               </option>

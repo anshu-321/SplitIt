@@ -197,7 +197,8 @@ app.post("/create-transaction", async (req, res) => {
   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
     if (err) return res.status(401).json({ message: "Unauthorized" });
   });
-  const { groupId, paidBy, amount, description, splitBetween } = req.body;
+  const { groupId, paidBy, amount, description, splitBetween, category } =
+    req.body;
   try {
     const newTransaction = await Transaction.create({
       groupId,
@@ -205,6 +206,7 @@ app.post("/create-transaction", async (req, res) => {
       amount,
       description,
       splitBetween,
+      category,
     });
     res.status(201).json(newTransaction);
   } catch (err) {
@@ -213,6 +215,7 @@ app.post("/create-transaction", async (req, res) => {
   }
 });
 
+//getting all transactions for a specific group
 app.get("/transactions/group/:groupId", async (req, res) => {
   const token = req.cookies?.token;
   if (!token) return res.status(401).json({ message: "Unauthorized" });
@@ -222,11 +225,6 @@ app.get("/transactions/group/:groupId", async (req, res) => {
   const { groupId } = req.params;
   try {
     const transactions = await Transaction.find({ groupId });
-    // if (!transactions || transactions.length === 0) {
-    //   return res
-    //     .status(404)
-    //     .json({ message: "No transactions found for this group" });
-    // }
     res.json(transactions);
     console.log("Transactions fetched successfully:", transactions);
   } catch (err) {

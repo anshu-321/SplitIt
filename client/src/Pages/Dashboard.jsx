@@ -59,13 +59,13 @@ const Dashboard = () => {
           </Link>
         </div>
 
-        <div className="max-w-6xl mx-auto flex gap-6 px-6 pb-4 scroll-smooth mt-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-6 pb-4 scroll-smooth mt-6">
           {userGroups && userGroups.length > 0 ? (
             userGroups.map((group) => (
               <Link
                 to={"/group/" + group._id}
                 key={group._id}
-                className="w-48 h-48 bg-white rounded-lg shadow-md p-6 snap-start flex flex-col justify-between hover:shadow-lg transition-shadow duration-300"
+                className="w-full h-48 bg-white rounded-lg shadow-md p-6 snap-start flex flex-col justify-between hover:shadow-lg transition-shadow duration-300"
               >
                 <div>
                   <h2 className="text-xl font-bold ">{group.name}</h2>
@@ -73,7 +73,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">
-                    Members : {group.members.join(", ").slice(0, 3)}
+                    Members : {group.members.slice(0, 3).join(", ")}
                   </p>
                   <p className="text-sm text-gray-500">
                     Created by: {group.createdBy}
@@ -82,7 +82,7 @@ const Dashboard = () => {
               </Link>
             ))
           ) : (
-            <div className="w-full flex justify-center items-center">
+            <div className="w-full flex justify-center items-center col-span-full">
               <p className="text-gray-600">No groups found.</p>
             </div>
           )}

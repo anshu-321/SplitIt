@@ -40,7 +40,13 @@ const GroupExpensePage = () => {
   if (error)
     return <div className="text-red-500 text-center mt-10">{error}</div>;
   if (!group) return <div className="text-center mt-10">Loading...</div>;
-
+  let totalSpends = 0;
+  if (transactions.length > 0) {
+    transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    totalSpends = transactions.reduce((sumAmount, transaction) => {
+      return sumAmount + Number(transaction.amount);
+    }, 0);
+  }
   return (
     <div className="bg-amber-600 min-h-screen bg-repeat">
       <Header />
@@ -49,6 +55,9 @@ const GroupExpensePage = () => {
           <div className="mb-6 border-b pb-4">
             <h1 className="text-3xl font-bold text-indigo-600 mb-2">
               {group.name}
+            </h1>
+            <h1 className="text-3xl font-bold text-indigo-400 mb-2">
+              Total Spends: ₹{totalSpends}
             </h1>
             <p className="text-gray-700 text-lg">{group.description}</p>
             <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
@@ -102,9 +111,15 @@ const GroupExpensePage = () => {
                       {transaction.description}
                     </h3>
                     <p className="text-gray-600">
+                      Category:{" "}
+                      <span className="font-medium text-black">
+                        {transaction.category}
+                      </span>
+                    </p>
+                    <p className="text-gray-600">
                       Amount:{" "}
                       <span className="font-medium text-black">
-                        ${transaction.amount.toFixed(2)}
+                        ₹{transaction.amount.toFixed(2)}
                       </span>
                     </p>
                     <p className="text-gray-600">
@@ -117,6 +132,21 @@ const GroupExpensePage = () => {
                       Split between:{" "}
                       <span className="font-medium text-black">
                         {transaction.splitBetween.join(", ")}
+                      </span>
+                    </p>
+                    <p className="text-gray-600">
+                      At:{" "}
+                      <span className="font-medium text-black">
+                        {transaction.createdAt
+                          ? new Date(transaction.createdAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )
+                          : "N/A"}
                       </span>
                     </p>
                   </div>
