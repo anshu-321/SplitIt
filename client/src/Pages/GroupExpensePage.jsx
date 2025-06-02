@@ -1,13 +1,49 @@
 import axios from "axios";
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import Header from "../Components/Header";
+import { UserContext } from "../UserContext";
 
 const GroupExpensePage = () => {
+  const { username } = useContext(UserContext);
   const { groupId } = useParams();
   const [group, setGroup] = React.useState(null);
   const [error, setError] = React.useState("");
   const [transactions, setTransactions] = React.useState([]);
+  const [debts, setDebts] = React.useState([]);
+  const [isActive, setIsActive] = React.useState(true);
+
+  const fetchDebts = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:4000/debts/group/" + groupId,
+        {
+          withCredentials: true,
+        }
+      );
+      setDebts(res.data);
+    } catch (err) {
+      console.error("Error fetching debts:", err);
+      setError("Failed to fetch debts.");
+    }
+  };
+
+  function clearDebt(debtId) {
+    axios
+      .patch(
+        `http://localhost:4000/debts/${debtId}/complete`,
+        {},
+        { withCredentials: true }
+      )
+      .then(() => {
+        fetchDebts();
+      })
+      .catch((err) => {
+        console.error("Failed to complete debt:", err);
+        setError("Failed to complete debt.");
+      });
+  }
+
   useEffect(() => {
     const fetchGroupMembers = async () => {
       try {
@@ -37,6 +73,11 @@ const GroupExpensePage = () => {
     fetchGroupMembers();
     fetchGroupTransactions();
   }, [groupId]);
+
+  useEffect(() => {
+    fetchDebts();
+  }, [transactions]);
+
   if (error)
     return <div className="text-red-500 text-center mt-10">{error}</div>;
   if (!group) return <div className="text-center mt-10">Loading...</div>;
@@ -47,6 +88,7 @@ const GroupExpensePage = () => {
       return sumAmount + Number(transaction.amount);
     }, 0);
   }
+
   return (
     <div className="bg-amber-600 min-h-screen bg-repeat">
       <Header />
@@ -73,7 +115,6 @@ const GroupExpensePage = () => {
               </span>
             </div>
           </div>
-
           <div className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-3">
               Members
@@ -89,7 +130,6 @@ const GroupExpensePage = () => {
               ))}
             </div>
           </div>
-
           <div>
             <div className="flex justify-between items-center max-w-6xl mx-auto bg-white rounded-lg shadow-md px-6 py-4 mb-6">
               <div className="text-2xl font-semibold">Group Transactions</div>
@@ -158,6 +198,70 @@ const GroupExpensePage = () => {
               </div>
             )}
           </div>
+        </div>
+        <div className="mt-6 bg-blue-950 rounded-lg px-6 py-8">
+          <h2 className="text-3xl font-bold text-white mb-4">Group Debts</h2>
+          <div className="text-white mb-4 flex gap-8">
+            <span
+              className={
+                "font-medium p-2 rounded-lg text-black cursor-pointer " +
+                (isActive ? "bg-green-200" : "bg-white")
+              }
+              onClick={() => setIsActive(true)}
+            >
+              Active Debts
+            </span>
+            <span
+              className={
+                "font-medium p-2 rounded-lg text-black cursor-pointer " +
+                (!isActive ? "bg-green-200" : "bg-white")
+              }
+              onClick={() => setIsActive(false)}
+            >
+              Completed Debts
+            </span>
+          </div>
+
+          {debts.length > 0 ? (
+            debts
+              .filter(
+                (debt) => debt.tag === (isActive ? "active" : "completed")
+              )
+              .map((debt) => (
+                <div
+                  key={debt._id}
+                  className="mb-4 p-4 bg-blue-50 text-blue-800 rounded-lg shadow-sm flex justify-between items-center"
+                >
+                  <p>
+                    <span className="font-medium">{debt.from}</span> owes{" "}
+                    <span className="font-medium">{debt.to}</span> ₹
+                    {debt.amount.toFixed(2)}
+                  </p>
+
+                  <div
+                    className="cursor-pointer text-green-500"
+                    onClick={() => clearDebt(debt._id)}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="size-6"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm3 10.5a.75.75 0 0 0 0-1.5H9a.75.75 0 0 0 0 1.5h6Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              ))
+          ) : (
+            <div className="text-white italic">
+              No debts recorded yet. Keep track of your expenses!
+            </div>
+          )}
         </div>
       </div>
     </div>

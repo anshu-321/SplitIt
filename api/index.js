@@ -8,6 +8,7 @@ const User = require("./models/User");
 const jwt = require("jsonwebtoken");
 const Group = require("./models/Group");
 const Transaction = require("./models/Transaction");
+const Debt = require("./models/Debt");
 
 dotenv.config();
 mongoose
@@ -27,6 +28,14 @@ app.use(
     credentials: true,
   })
 );
+
+function checkAuth(req, res) {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if (err) return res.status(401).json({ message: "Unauthorized" });
+  });
+}
 
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
@@ -171,11 +180,7 @@ app.get("/groups/user/:username", async (req, res) => {
 
 // - ---------------- FETCHING THE GROUPS BASED ON GROUP ID -------------------
 app.get("/group/:groupId", async (req, res) => {
-  const token = req.cookies?.token;
-  if (!token) return res.status(401).json({ message: "Unauthorized" });
-  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-    if (err) return res.status(401).json({ message: "Unauthorized" });
-  });
+  checkAuth(req, res);
 
   try {
     const group = await Group.findById(req.params.groupId);
@@ -190,13 +195,9 @@ app.get("/group/:groupId", async (req, res) => {
   }
 });
 
-//------------------ CREATING A TRANSACTION -------------------
+//------------------ CREATING A TRANSACTION AND MAINTING THE DEBTS-------------------
 app.post("/create-transaction", async (req, res) => {
-  const token = req.cookies?.token;
-  if (!token) return res.status(401).json({ message: "Unauthorized" });
-  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-    if (err) return res.status(401).json({ message: "Unauthorized" });
-  });
+  checkAuth(req, res);
   const { groupId, paidBy, amount, description, splitBetween, category } =
     req.body;
   try {
@@ -208,6 +209,20 @@ app.post("/create-transaction", async (req, res) => {
       splitBetween,
       category,
     });
+    // Updating the group Debt's
+    const to = paidBy;
+    splitBetween.forEach(async (from) => {
+      if (from !== to) {
+        await Debt.create({
+          groupId,
+          from,
+          to,
+          amount: amount / splitBetween.length,
+          tag: "active",
+        });
+      }
+    });
+
     res.status(201).json(newTransaction);
   } catch (err) {
     console.error("Error creating transaction:", err);
@@ -217,11 +232,7 @@ app.post("/create-transaction", async (req, res) => {
 
 //getting all transactions for a specific group
 app.get("/transactions/group/:groupId", async (req, res) => {
-  const token = req.cookies?.token;
-  if (!token) return res.status(401).json({ message: "Unauthorized" });
-  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-    if (err) return res.status(401).json({ message: "Unauthorized" });
-  });
+  checkAuth(req, res);
   const { groupId } = req.params;
   try {
     const transactions = await Transaction.find({ groupId });
@@ -234,3 +245,35 @@ app.get("/transactions/group/:groupId", async (req, res) => {
 });
 
 const server = app.listen(4000);
+
+//------------------ DEBTS -------------------
+app.get("/debts/group/:groupId", async (req, res) => {
+  checkAuth(req, res);
+  const { groupId } = req.params;
+  try {
+    const debts = await Debt.find({ groupId });
+    res.json(debts);
+  } catch (err) {
+    console.error("Error fetching debts:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.patch("/debts/:debtId/complete", async (req, res) => {
+  checkAuth(req, res);
+  const { debtId } = req.params;
+  try {
+    const updatedDebt = await Debt.findByIdAndUpdate(
+      debtId,
+      { tag: "completed" },
+      { new: true }
+    );
+    if (!updatedDebt) {
+      return res.status(404).json({ message: "Debt not found" });
+    }
+    res.json(updatedDebt);
+  } catch (err) {
+    console.error("Error completing debt:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
