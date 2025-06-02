@@ -226,7 +226,7 @@ app.get("/transactions/group/:groupId", async (req, res) => {
   try {
     const transactions = await Transaction.find({ groupId });
     res.json(transactions);
-    console.log("Transactions fetched successfully:", transactions);
+    // console.log("Transactions fetched successfully:", transactions);
   } catch (err) {
     console.error("Error fetching transactions:", err);
     res.status(500).json({ message: "Internal server error" });
