@@ -3,6 +3,7 @@ import React, { useContext, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import Header from "../Components/Header";
 import { UserContext } from "../UserContext";
+import CategoryPieChart from "../Components/PiChart";
 
 const GroupExpensePage = () => {
   const { username } = useContext(UserContext);
@@ -12,6 +13,7 @@ const GroupExpensePage = () => {
   const [transactions, setTransactions] = React.useState([]);
   const [debts, setDebts] = React.useState([]);
   const [isActive, setIsActive] = React.useState(true);
+  const [dataToSend, setDataToSend] = React.useState([]);
 
   const fetchDebts = async () => {
     try {
@@ -70,8 +72,22 @@ const GroupExpensePage = () => {
       }
     };
 
+    const fetchGroupTransactionsCategories = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:4000/transactions/" + groupId + "/categories",
+          { withCredentials: true }
+        );
+        setDataToSend(res.data);
+      } catch (err) {
+        console.error("Error fetching transactions categories:", err);
+        setError("Failed to fetch transactions categories.");
+      }
+    };
+
     fetchGroupMembers();
     fetchGroupTransactions();
+    fetchGroupTransactionsCategories();
   }, [groupId]);
 
   useEffect(() => {
@@ -115,6 +131,7 @@ const GroupExpensePage = () => {
               </span>
             </div>
           </div>
+          <CategoryPieChart data={dataToSend} />
           <div className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-3">
               Members

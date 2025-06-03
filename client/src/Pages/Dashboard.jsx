@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import Header from "../Components/Header";
-import { Link, useNavigate } from "react-router-dom";
+import { data, Link, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../UserContext";
 import axios from "axios";
+import CategoryPieChart from "../Components/PiChart";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { id, name, username } = useContext(UserContext);
   const [userGroups, setUserGroups] = useState(undefined);
+  const [dataToSend, setDataToSend] = useState([]);
   useEffect(() => {
     if (id === undefined || id === null) {
       navigate("/login");
@@ -35,14 +37,52 @@ const Dashboard = () => {
         console.error("Error fetching groups:", err);
       }
     };
+
+    const fetchSpends = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:4000/transactions/user/" + username + "/categories",
+          {
+            withCredentials: true,
+          }
+        );
+        setDataToSend(res.data);
+      } catch (err) {
+        console.error("Error fetching spends:", err);
+      }
+    };
+
     fetchGroups();
+    fetchSpends();
   }, [username]);
+
+  if (dataToSend.length > 0) {
+    dataToSend.sort((a, b) => b.totalAmount - a.totalAmount);
+    // console.log("Data to send:", dataToSend);
+  }
 
   return (
     <div className="bg-amber-600 min-h-screen bg-repeat">
       <Header />
+      <div className="pt-32"></div>
+      <div className="grid md:grid-cols-2 grid-cols-1 gap-4 px-6 pb-4 pt-6 max-w-6xl mx-auto">
+        <CategoryPieChart data={dataToSend} />
+        <div className="font-bold text-3xl px-6 py-4 bg-white rounded-lg shadow-md">
+          Expenses by Category
+          {dataToSend.length > 0 ? (
+            dataToSend.map((item) => (
+              <div key={item.category} className="text-lg text-gray-700 my-2">
+                {item.category}: ₹{item.totalAmount.toFixed(2)}
+              </div>
+            ))
+          ) : (
+            <div className="text-gray-600">No expenses found.</div>
+          )}
+        </div>
+      </div>
+
       <div className="h-screen bg-amber-600 px-6 w-max-4xl mx-auto">
-        <div className="max-w-6xl mx-auto flex flex-col px-6 pb-4 pt-28">
+        <div className="max-w-6xl mx-auto flex flex-col px-6 pb-4 pt-6">
           <h1 className="text-3xl font-bold text-white mb-4">Dashboard</h1>
           <p className="text-lg text-white">
             Welcome, {name ? name : "User"}! This is your dashboard.

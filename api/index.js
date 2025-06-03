@@ -277,3 +277,78 @@ app.patch("/debts/:debtId/complete", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+// -------------------FETCHING THE SUM OF SPENDS FOR A USER IN A CATEGORY -------------
+
+app.get("/transactions/user/:username/categories", async (req, res) => {
+  checkAuth(req, res);
+  const { username } = req.params;
+  try {
+    const transactions = await Transaction.aggregate([
+      { $match: { splitBetween: username } }, // only includes transaction where user is involved
+
+      // Add a field to calculate user share
+      {
+        $addFields: {
+          userShare: {
+            $divide: ["$amount", { $size: "$splitBetween" }],
+          },
+        },
+      },
+
+      // Group by category and sum the user share
+      {
+        $group: {
+          _id: "$category",
+          totalAmount: { $sum: "$userShare" },
+        },
+      },
+
+      // Project the result to include category and total amount
+      {
+        $project: {
+          category: "$_id",
+          totalAmount: 1,
+          _id: 0,
+        },
+      },
+    ]);
+    res.json(transactions);
+  } catch (err) {
+    console.error("Error fetching category spends:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// -------------------FETCHING THE SUM OF SPENDS FOR A GROUP -------------
+app.get("/transactions/:groupId/categories", async (req, res) => {
+  checkAuth(req, res);
+  const { groupId } = req.params;
+  const groupObjectId = new mongoose.Types.ObjectId(groupId);
+  try {
+    const transactions = await Transaction.aggregate([
+      { $match: { groupId: groupObjectId } }, // only includes transaction where groupId is involved
+
+      // Group by category and sum the user share
+      {
+        $group: {
+          _id: "$category",
+          totalAmount: { $sum: "$amount" },
+        },
+      },
+
+      // Project the result to include category and total amount
+      {
+        $project: {
+          category: "$_id",
+          totalAmount: 1,
+          _id: 0,
+        },
+      },
+    ]);
+    res.json(transactions);
+  } catch (err) {
+    console.error("Error fetching category spends:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
