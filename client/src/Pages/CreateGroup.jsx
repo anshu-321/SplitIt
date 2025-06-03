@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { UserContext } from "../UserContext";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "../Components/Header";
 
 const CreateGroup = () => {
@@ -13,8 +13,27 @@ const CreateGroup = () => {
   const [members, setMembers] = useState([currentUsername]);
   const navigate = useNavigate();
 
+  const { groupId } = useParams();
+  const isEdit = groupId !== undefined && groupId !== null;
+
   useEffect(() => {
+    const fetchCurrInfo = async () => {
+      if (isEdit) {
+        const res = await axios.get("http://localhost:4000/group/" + groupId, {
+          withCredentials: true,
+        });
+        const { name, description, status, members } = res.data;
+        setGroupName(name);
+        setDescription(description);
+        setStatus(status);
+        setMembers(members);
+      }
+      if (currentUsername === undefined || currentUsername === null) {
+        navigate("/login");
+      }
+    };
     setMembers([currentUsername]);
+    fetchCurrInfo();
   }, [currentUsername]);
 
   useEffect(() => {
@@ -55,34 +74,51 @@ const CreateGroup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault(e);
-    console.log({
-      name: groupName,
-      description,
-      status,
-      members,
-      createdBy: currentUsername,
-    });
-
-    try {
-      const res = await axios.post(
-        "http://localhost:4000/create-group",
-        {
-          name: groupName,
-          description,
-          status,
-          members,
-          createdBy: currentUsername,
-        },
-        { withCredentials: true }
-      );
-      // console.log("Group created successfully:", res.data);
-      navigate("/dashboard");
-    } catch (err) {
-      console.error("Error creating group:", err);
-      if (err.response && err.response.data) {
-        alert(err.response.data.message || "Failed to create group.");
-      } else {
-        alert("An error occurred while creating the group.");
+    if (isEdit) {
+      try {
+        await axios.patch(
+          `http://localhost:4000/group/${groupId}/update`,
+          {
+            name: groupName,
+            description,
+            status,
+            members,
+            createdBy: currentUsername,
+          },
+          { withCredentials: true }
+        );
+        navigate("/dashboard");
+      } catch (err) {
+        console.error("Error updating group:", err);
+        if (err.response && err.response.data) {
+          alert(err.response.data.message || "Failed to update group.");
+        } else {
+          alert("An error occurred while updating the group.");
+        }
+        return;
+      }
+    } else {
+      try {
+        const res = await axios.post(
+          "http://localhost:4000/create-group",
+          {
+            name: groupName,
+            description,
+            status,
+            members,
+            createdBy: currentUsername,
+          },
+          { withCredentials: true }
+        );
+        // console.log("Group created successfully:", res.data);
+        navigate("/dashboard");
+      } catch (err) {
+        console.error("Error creating group:", err);
+        if (err.response && err.response.data) {
+          alert(err.response.data.message || "Failed to create group.");
+        } else {
+          alert("An error occurred while creating the group.");
+        }
       }
     }
   };
@@ -162,7 +198,7 @@ const CreateGroup = () => {
                   className="flex items-center gap-2 px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm"
                 >
                   {member}
-                  {member !== currentUsername && (
+                  {member !== currentUsername && !isEdit && (
                     <button
                       onClick={() => removeMember(member)}
                       className="text-red-500 hover:text-red-700 font-bold"
@@ -181,7 +217,7 @@ const CreateGroup = () => {
               type="submit"
               className="bg-amber-600 text-white px-6 py-2 rounded-md hover:bg-amber-500 transition-colors"
             >
-              Create Group
+              {isEdit ? "Update Group" : "Create Group"}
             </button>
           </div>
         </form>

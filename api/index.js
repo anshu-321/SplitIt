@@ -154,6 +154,26 @@ app.post("/create-group", async (req, res) => {
   }
 });
 
+// Updating the group based on groupId
+app.patch("/group/:groupId/update", async (req, res) => {
+  checkAuth(req, res);
+  const { groupId } = req.params;
+  const updateFields = req.body;
+
+  try {
+    const updatedGroup = await Group.findByIdAndUpdate(groupId, updateFields, {
+      new: true,
+    });
+    if (!updatedGroup) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    res.json({ message: "Group updated successfully", group: updatedGroup });
+  } catch (err) {
+    console.error("Error updating group:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 // - ---------------- FETCHING THE GROUPS BASED ON USERNAME -------------------
 app.get("/groups/user/:username", async (req, res) => {
   const token = req.cookies?.token;
@@ -191,6 +211,25 @@ app.get("/group/:groupId", async (req, res) => {
     // console.log("Group fetched successfully:", group);
   } catch (err) {
     console.error("Error fetching group by ID:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// DELETING A GROUP ----
+app.delete("/group/:groupId/delete", async (req, res) => {
+  checkAuth(req, res);
+  const { groupId } = req.params;
+  try {
+    const deletedGroup = await Group.findByIdAndDelete(groupId);
+    if (!deletedGroup) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    // delete all transactions and debts associated with this group
+    await Transaction.deleteMany({ groupId }); //deleteMany deletd the groups based on groupId
+    await Debt.deleteMany({ groupId });
+    res.json({ message: "Group deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting group:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 });
