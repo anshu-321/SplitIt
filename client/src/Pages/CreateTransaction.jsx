@@ -5,7 +5,7 @@ import axios from "axios";
 import Header from "../Components/Header";
 
 const CreateTransaction = () => {
-  const { groupId } = useParams();
+  const { groupId, transactionId } = useParams();
   const { user } = useContext(UserContext);
   const [groupMembers, setGroupMembers] = useState([]);
   const [paidBy, setPaidBy] = useState("");
@@ -32,6 +32,8 @@ const CreateTransaction = () => {
     "Miscellaneous",
   ];
 
+  const isEdit = transactionId !== undefined && transactionId !== null;
+
   useEffect(() => {
     // Fetch group details to get member list
     const fetchGroup = async () => {
@@ -40,6 +42,23 @@ const CreateTransaction = () => {
       });
       setGroupMembers(res.data.members);
     };
+
+    const fetchTransaction = async () => {
+      if (isEdit) {
+        const res = await axios.get(
+          `http://localhost:4000/transaction/${transactionId}`,
+          { withCredentials: true }
+        );
+        const transaction = res.data;
+        setPaidBy(transaction.paidBy);
+        setAmount(transaction.amount.toString());
+        setDescription(transaction.description);
+        setSplitBetween(transaction.splitBetween || []);
+        setCategory(transaction.category || "Miscellaneous");
+      }
+    };
+
+    fetchTransaction();
     fetchGroup();
   }, [groupId]);
 
@@ -51,23 +70,49 @@ const CreateTransaction = () => {
       return;
     }
 
-    try {
-      await axios.post(
-        `http://localhost:4000/create-transaction`,
-        {
-          groupId,
-          paidBy,
-          amount: parseFloat(amount),
-          description,
-          splitBetween,
-          category,
-        },
-        { withCredentials: true }
-      );
+    if (isEdit && !transactionId) {
+      alert("Transaction ID is required for editing.");
+      return;
+    }
+
+    if (isEdit) {
+      try {
+        await axios.patch(
+          "http://localhost:4000/transaction/" + transactionId + "/edit",
+          {
+            groupId,
+            paidBy,
+            amount: parseFloat(amount),
+            description,
+            splitBetween,
+            category,
+          },
+          { withCredentials: true }
+        );
+      } catch (err) {
+        console.error("Transaction update failed:", err);
+        return;
+      }
       navigate(`/group/${groupId}`);
-      console.log("Transaction created successfully");
-    } catch (err) {
-      console.error("Transaction creation failed:", err);
+    } else {
+      try {
+        await axios.post(
+          `http://localhost:4000/create-transaction`,
+          {
+            groupId,
+            paidBy,
+            amount: parseFloat(amount),
+            description,
+            splitBetween,
+            category,
+          },
+          { withCredentials: true }
+        );
+        navigate(`/group/${groupId}`);
+        console.log("Transaction created successfully");
+      } catch (err) {
+        console.error("Transaction creation failed:", err);
+      }
     }
   };
 
@@ -77,6 +122,7 @@ const CreateTransaction = () => {
       <div className="max-w-md w-full px-6 py-10 bg-white rounded-xl shadow-md">
         <h2 className="text-2xl font-bold mb-4 text-center">Add Transaction</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <label htmlFor="block">Description:</label>
           <input
             type="text"
             placeholder="Description"
@@ -84,6 +130,7 @@ const CreateTransaction = () => {
             onChange={(e) => setDescription(e.target.value)}
             className="w-full p-2 border rounded"
           />
+          <label htmlFor="block">Amount:</label>
           <input
             type="number"
             placeholder="Amount"
@@ -91,13 +138,13 @@ const CreateTransaction = () => {
             onChange={(e) => setAmount(e.target.value)}
             className="w-full p-2 border rounded"
           />
-          <label className="block">paidBy:</label>
+          <label className="block">Paid By:</label>
           <select
             className="w-full p-2 border rounded"
             value={paidBy}
             onChange={(e) => setPaidBy(e.target.value)}
           >
-            <option value="">Select paidBy</option>
+            <option value="">Select Paid By</option>
             {groupMembers.map((member) => (
               <option key={member} value={member}>
                 {member}
@@ -119,7 +166,7 @@ const CreateTransaction = () => {
             ))}
           </select>
 
-          <label className="block">splitBetween:</label>
+          <label className="block">Split Between:</label>
           <div className="flex flex-col space-y-1">
             {groupMembers.map((member) => (
               <label key={member} className="flex items-center space-x-2">
@@ -144,7 +191,7 @@ const CreateTransaction = () => {
             type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
           >
-            Add Transaction
+            {isEdit ? "Update" : "Add Transaction"}
           </button>
         </form>
       </div>

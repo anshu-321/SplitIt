@@ -7,6 +7,11 @@ const debtSchema = new mongoose.Schema(
       ref: "Group",
       required: true,
     },
+    transactionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Transaction",
+      required: true,
+    },
     from: {
       type: String, // username of the person who owes // person who will pay the money
       required: true,

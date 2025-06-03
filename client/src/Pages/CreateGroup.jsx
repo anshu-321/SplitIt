@@ -5,7 +5,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "../Components/Header";
 
 const CreateGroup = () => {
-  const { name: currentUsername, id } = useContext(UserContext);
+  const { username: currentUsername, id } = useContext(UserContext);
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("Active");

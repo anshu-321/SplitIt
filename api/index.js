@@ -225,7 +225,7 @@ app.delete("/group/:groupId/delete", async (req, res) => {
       return res.status(404).json({ message: "Group not found" });
     }
     // delete all transactions and debts associated with this group
-    await Transaction.deleteMany({ groupId }); //deleteMany deletd the groups based on groupId
+    await Transaction.deleteMany({ groupId }); //deleteMany deleted the groups based on groupId
     await Debt.deleteMany({ groupId });
     res.json({ message: "Group deleted successfully" });
   } catch (err) {
@@ -258,6 +258,7 @@ app.post("/create-transaction", async (req, res) => {
           to,
           amount: amount / splitBetween.length,
           tag: "active",
+          transactionId: newTransaction._id,
         });
       }
     });
@@ -284,6 +285,83 @@ app.get("/transactions/group/:groupId", async (req, res) => {
 });
 
 const server = app.listen(4000);
+
+//FETCHING A TRANSACTION BY ID
+app.get("/transaction/:transactionId", async (req, res) => {
+  checkAuth(req, res);
+  const { transactionId } = req.params;
+  try {
+    const transaction = await Transaction.findById(transactionId);
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+    res.json(transaction);
+  } catch (err) {
+    console.error("Error fetching transaction by ID:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+//UPDATING A TRANSACTION
+app.patch("/transaction/:transactionId/edit", async (req, res) => {
+  checkAuth(req, res);
+  const { transactionId } = req.params;
+  const updatedFields = req.body;
+  try {
+    const updatedTransaction = await Transaction.findByIdAndUpdate(
+      transactionId,
+      updatedFields,
+      { new: true } // Return the updated document
+    );
+    if (!updatedTransaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    //deleting existing debts for this transaction
+    await Debt.deleteMany({ transactionId }); // Delete existing debts for this transaction
+    const { groupId, paidBy, amount, splitBetween } = updatedFields;
+    const to = paidBy;
+    splitBetween.forEach(async (from) => {
+      if (from !== to) {
+        await Debt.create({
+          groupId,
+          from,
+          to,
+          amount: amount / splitBetween.length,
+          tag: "active",
+          transactionId: updatedTransaction._id,
+        });
+      }
+    });
+
+    res.json({
+      message: "Transaction updated successfully",
+      transaction: updatedTransaction,
+    });
+  } catch (err) {
+    console.error("Error updating transaction:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+//------------------ DELETING A TRANSACTION -------------------
+app.delete("/transaction/:transactionId/delete", async (req, res) => {
+  checkAuth(req, res);
+  const { transactionId } = req.params;
+  try {
+    const deletedTransaction = await Transaction.findByIdAndDelete(
+      transactionId
+    );
+    if (!deletedTransaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+    await Debt.deleteMany({ transactionId }); // Delete all debts associated with this transaction
+    res.json({ message: "Transaction deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting transaction:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 //------------------ DEBTS -------------------
 app.get("/debts/group/:groupId", async (req, res) => {
