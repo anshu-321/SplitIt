@@ -2,13 +2,38 @@ import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../UserContext";
+import axios from "axios";
 
 const Header = () => {
   const { name } = useContext(UserContext);
   const navigate = useNavigate();
+  const [isLogout, setIsLogout] = React.useState(false);
   const onLogo = () => {
     navigate("/");
   };
+
+  const clickOnce = () => {
+    if (!isLogout) {
+      setIsLogout(true);
+    } else {
+      handleLogout();
+      setIsLogout(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const res = await axios.post("http://localhost:4000/logout", {
+        withCredentials: true,
+      });
+      console.log("Logout response:", res);
+    } catch (err) {
+      console.error("Error logging out:", err);
+    }
+
+    navigate("/login");
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-teal-600 text-white p-6 shadow-md w-full ">
       <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -54,7 +79,22 @@ const Header = () => {
               >
                 Dashboard
               </Link>
-              <div className=" bg-blue-500 py-2 px-4 rounded-lg">{name}</div>
+              {isLogout && (
+                <div
+                  className="bg-red-500 py-2 px-4 rounded-lg cursor-pointer"
+                  onClick={clickOnce}
+                >
+                  Logout
+                </div>
+              )}
+              {isLogout === false && (
+                <div
+                  className=" bg-blue-500 py-2 px-4 rounded-lg"
+                  onClick={clickOnce}
+                >
+                  {name}
+                </div>
+              )}
             </div>
           )}
           {(name === undefined || name === null) && (

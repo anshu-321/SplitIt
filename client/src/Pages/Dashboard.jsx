@@ -11,6 +11,7 @@ const Dashboard = () => {
   const { id, name, username } = useContext(UserContext);
   const [userGroups, setUserGroups] = useState(undefined);
   const [dataToSend, setDataToSend] = useState([]);
+  const [summaryFromAI, setSummaryFromAI] = useState("");
   useEffect(() => {
     if (id === undefined || id === null) {
       navigate("/login");
@@ -54,6 +55,7 @@ const Dashboard = () => {
 
     fetchGroups();
     fetchSpends();
+    handleAIOverview();
   }, [username]);
 
   if (dataToSend.length > 0) {
@@ -80,6 +82,19 @@ const Dashboard = () => {
     }
   };
 
+  const handleAIOverview = async () => {
+    try {
+      const res = await axios.get("http://localhost:4000/gemini/" + username, {
+        withCredentials: true,
+      });
+      setSummaryFromAI(res.data.data);
+      console.log("AI Overview:", res.data.data);
+    } catch (err) {
+      console.error("Error fetching AI overview:", err);
+      alert("Failed to fetch AI overview. Please try again.");
+    }
+  };
+
   return (
     <div className="bg-amber-600 min-h-screen bg-repeat">
       <Header />
@@ -101,14 +116,29 @@ const Dashboard = () => {
       </div>
 
       <div className="h-screen bg-amber-600 px-6 w-max-4xl mx-auto">
-        <div className="max-w-6xl mx-auto flex flex-col px-6 pb-4 pt-6">
+        {/* <div className="max-w-6xl mx-auto flex flex-col px-6 pb-4 pt-6">
           <h1 className="text-3xl font-bold text-white mb-4">Dashboard</h1>
-          <p className="text-lg text-white">
-            Welcome, {name ? name : "User"}! This is your dashboard.
-          </p>
-          <p className="text-lg text-white mt-2">
-            Here you can manage your expenses and view your financial insights.
-          </p>
+          <p className="text-lg text-white">Welcome, {name ? name : "User"}!</p>
+          <p className="text-lg text-white mt-2">{summaryFromAI}</p>
+        </div> */}
+
+        <div className="max-w-6xl mx-auto flex flex-col items-center px-6 pb-4 pt-6">
+          <div className="w-full bg-gradient-to-r from-violet-700 to-violet-500 rounded-2xl shadow-lg p-8 mb-6 flex flex-col items-center">
+            <h1 className="text-4xl font-extrabold text-white mb-2 tracking-tight drop-shadow">
+              Gemini Summary
+            </h1>
+            <p className="text-xl text-indigo-100 mb-2">
+              Welcome,{" "}
+              <span className="font-semibold">{name ? name : "User"}</span>!
+            </p>
+            {summaryFromAI && (
+              <div className="mt-4 w-full bg-white/80 rounded-lg p-4 shadow-inner">
+                <p className="text-base text-gray-800 text-center">
+                  {summaryFromAI}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex justify-between items-center max-w-6xl mx-auto bg-white rounded-lg shadow-md px-6 py-4">

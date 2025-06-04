@@ -9,6 +9,7 @@ const jwt = require("jsonwebtoken");
 const Group = require("./models/Group");
 const Transaction = require("./models/Transaction");
 const Debt = require("./models/Debt");
+const GoogleGenAI = require("@google/genai").GoogleGenAI;
 
 dotenv.config();
 mongoose
@@ -466,6 +467,62 @@ app.get("/transactions/:groupId/categories", async (req, res) => {
     res.json(transactions);
   } catch (err) {
     console.error("Error fetching category spends:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// -------------------LOGOUT -------------------
+app.post("/logout", (req, res) => {
+  checkAuth(req, res);
+  res.clearCookie("token"); // Clear the cookie
+  res.json("Logged out successfully");
+});
+
+// -------------------GEMINI API -------------------
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+async function GeminiFunction(userDebt, userTransaction, username) {
+  const response = await ai.models.generateContent({
+    model: "gemini-2.0-flash",
+    contents: [
+      {
+        text: `You are a financial assistant. Based on the following debts, provide a summary of the user's financial situation:\n\n DO NOT GIVE NEXT STEPS , KEEP THE ANSWER MEDIUM , AND TRY TO GIVE SUGGESTIONS BASED ON ESSENTIAL AND NON ESSENTIAL SPENDS , KEEP THE SYMBOL OF CURRENCY AS INDIAN RUPEES RATHER THAN DOLLARS , AND BEGIN NATURALLY AND IN RESULT DO NOT BREAK LINES AND EXPAND IF POSSIBLE AND PREVENT USING END OF LINE SYMBOL THE DEBTS DATA , AND USERNAME IS ${username} AND USE THIS DEBT TABLE TO MAKE CONCLUSIONS AS TO WHAT IS YET TO BE RECEIVED BY THE USER AND IS OWED BY THE USER ${userDebt
+          .map(
+            (debt) =>
+              `Debt from ${debt.from} to ${debt.to} of amount ${debt.amount} with tag ${debt.tag}`
+          )
+          .join("\n")}  AND THE USER DATA IS AS FOLLOWS ${userTransaction.map(
+          (transaction) => {
+            ` Paid By: ${transaction.paidBy}, Amount: ${
+              transaction.amount
+            }, Description: ${
+              transaction.description
+            }, Split Between: ${transaction.splitBetween.join(
+              ", "
+            )}, Category: ${transaction.category}`;
+          }
+        )}  MENTION INFO FROM THE DEBTS AND TRANSACTIONS AND GIVE A SUMMARY OF THE USER'S FINANCIAL SITUATION SUGGESTING ESSENTIAL AND NON-ESSENTIAL SPENDS. MENTION ONLY WHAT IS OWED BY THE USER`,
+      },
+    ],
+  });
+  return response.text;
+}
+
+app.get("/gemini/:username", async (req, res) => {
+  checkAuth(req, res);
+  const { username } = req.params;
+  try {
+    const resp = await Debt.find({ to: req.params.username, tag: "active" });
+    const userTransaction = await Transaction.find({
+      splitBetween: username,
+      paidBy: username,
+    });
+    const GeminiRes = await GeminiFunction(resp, userTransaction, username);
+    // console.log("Gemini Response:", GeminiRes);
+    res.json({ message: "Gemini API called successfully", data: GeminiRes });
+  } catch (err) {
+    console.error("Error in Gemini API:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 });
