@@ -20,9 +20,9 @@ const features = [
       "Automated balance calculations showing who owes what to whom with clarity.",
   },
   {
-    title: "Email Reminders",
+    title: "AI Summary",
     description:
-      "Get email alerts for pending dues and ensure timely settlements.",
+      "Get a quick overview of your group expenses with AI-generated summaries, highlighting key insights and trends.",
   },
 ];
 
@@ -30,14 +30,14 @@ const comparisons = [
   { metric: "Ease of Use", splitit: "✅", traditional: "❌" },
   { metric: "Multi-User Input", splitit: "✅", traditional: "❌" },
   { metric: "Automatic Calculations", splitit: "✅", traditional: "❌" },
-  { metric: "Email Notifications", splitit: "✅", traditional: "❌" },
+  { metric: "AI Summary", splitit: "✅", traditional: "❌" },
 ];
 
 const reviews = [
-  "SplitIt made our group trip so easy to manage! – Aditi",
-  "Finally, no more arguments about money after parties. – Raj",
-  "Email reminders saved me from being the 'bad guy'. – Sneha",
-  "It’s so intuitive, even my dad uses it for family expenses! – Arun",
+  "SplitIt made our group trip so easy to manage! - Aditi",
+  "Finally, no more arguments about money after parties. - Raj",
+  "AI Summary saved me from being the 'bad guy'. - Sneha",
+  "It's so intuitive, even my dad uses it for family expenses! - Arun",
 ];
 
 export default function LandingPage() {
@@ -98,28 +98,47 @@ export default function LandingPage() {
         id="comparison"
         className="bg-cyan-700 py-20 px-4 min-h-screen flex flex-col justify-center"
       >
-        <h3 className="text-3xl font-semibold text-center mb-12">
+        <h3 className="text-4xl font-bold text-center mb-12 text-white drop-shadow">
           Why SplitIt Beats the Old Way
         </h3>
         <div className="max-w-3xl mx-auto overflow-x-auto">
-          <table className="w-full table-auto border border-gray-200 text-sm sm:text-base">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border p-3 text-left">Feature</th>
-                <th className="border p-3">SplitIt</th>
-                <th className="border p-3">Traditional</th>
-              </tr>
-            </thead>
-            <tbody>
-              {comparisons.map((item, idx) => (
-                <tr key={idx} className="text-center">
-                  <td className="border p-3 text-left">{item.metric}</td>
-                  <td className="border p-3">{item.splitit}</td>
-                  <td className="border p-3">{item.traditional}</td>
+          <div className="bg-white/90 rounded-2xl shadow-xl p-6">
+            <table className="w-full table-auto rounded-xl overflow-hidden">
+              <thead>
+                <tr className="bg-indigo-100">
+                  <th className="p-4 text-left text-lg font-semibold text-indigo-700">
+                    Feature
+                  </th>
+                  <th className="p-4 text-lg font-semibold text-green-700">
+                    SplitIt
+                  </th>
+                  <th className="p-4 text-lg font-semibold text-red-700">
+                    Traditional
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {comparisons.map((item, idx) => (
+                  <tr
+                    key={idx}
+                    className={
+                      idx % 2 === 0
+                        ? "bg-white text-center"
+                        : "bg-indigo-50 text-center"
+                    }
+                  >
+                    <td className="p-4 text-left font-medium">{item.metric}</td>
+                    <td className="p-4 text-green-600 text-xl">
+                      {item.splitit}
+                    </td>
+                    <td className="p-4 text-red-600 text-xl">
+                      {item.traditional}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -137,15 +156,15 @@ export default function LandingPage() {
             >
               <div className="flex items-center mb-4 gap-3">
                 <div className="bg-indigo-200 w-10 h-10 rounded-full flex items-center justify-center text-indigo-700 font-bold">
-                  {review.split("–")[1]?.trim()?.charAt(0) || "U"}
+                  {review.split("-")[1]?.trim()?.charAt(0) || "U"}
                 </div>
                 <p className="font-semibold">
-                  {review.split("–")[1]?.trim() || "User"}
+                  {review.split("-")[1]?.trim() || "User"}
                 </p>
               </div>
 
               <p className="text-gray-700 italic">
-                “{review.split("–")[0].trim()}”
+                “{review.split("-")[0].trim()}”
               </p>
 
               <div className="flex justify-end mt-4 text-yellow-400">
