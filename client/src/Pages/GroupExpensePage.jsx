@@ -24,7 +24,9 @@ const GroupExpensePage = () => {
           withCredentials: true,
         }
       );
-      setDebts(res.data);
+      const userOwes = res.data.filter((debt) => debt.to === username);
+      setDebts(userOwes);
+      console.log("Fetched debts:", userOwes);
     } catch (err) {
       console.error("Error fetching debts:", err);
       setError("Failed to fetch debts.");
@@ -312,7 +314,7 @@ const GroupExpensePage = () => {
                 >
                   <p>
                     <span className="font-medium">{debt.from}</span> owes{" "}
-                    <span className="font-medium">{debt.to}</span> ₹
+                    <span className="font-medium">you </span> ₹
                     {debt.amount.toFixed(2)}
                   </p>
 
@@ -337,7 +339,7 @@ const GroupExpensePage = () => {
               ))
           ) : (
             <div className="text-white italic">
-              No debts recorded yet. Keep track of your expenses!
+              No debts to show. You are all clear!
             </div>
           )}
         </div>
