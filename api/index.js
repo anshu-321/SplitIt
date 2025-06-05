@@ -10,6 +10,7 @@ const Group = require("./models/Group");
 const Transaction = require("./models/Transaction");
 const Debt = require("./models/Debt");
 const GoogleGenAI = require("@google/genai").GoogleGenAI;
+const PORT = process.env.PORT || 4000;
 
 dotenv.config();
 mongoose
@@ -285,7 +286,7 @@ app.get("/transactions/group/:groupId", async (req, res) => {
   }
 });
 
-const server = app.listen(4000);
+const server = app.listen(PORT);
 
 //FETCHING A TRANSACTION BY ID
 app.get("/transaction/:transactionId", async (req, res) => {
