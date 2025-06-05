@@ -495,7 +495,11 @@ app.get("/transactions/:groupId/categories", checkAuth, async (req, res) => {
 
 // -------------------LOGOUT -------------------
 app.post("/logout", checkAuth, (req, res) => {
-  res.clearCookie("token"); // Clear the cookie
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "none",
+    secure: true,
+  });
   return res.json("Logged out successfully");
 });
 
