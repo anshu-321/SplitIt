@@ -21,8 +21,6 @@ const jwtSecret = process.env.JWT_SECRET;
 const bcryptSalt = bcrypt.genSaltSync(10);
 
 const app = express();
-app.use(express.json());
-app.use(cookieParser());
 
 const allowedOrigins = [
   "https://splitit-frontend.onrender.com",
@@ -35,6 +33,8 @@ app.use(
     credentials: true,
   })
 );
+app.use(cookieParser());
+app.use(express.json());
 
 function checkAuth(req, res) {
   const token = req.cookies?.token;
@@ -57,13 +57,21 @@ app.post("/login", async (req, res) => {
           {},
           (err, token) => {
             if (err) throw err;
-            res.cookie("token", token).json({
-              id: findUser._id,
-              username: findUser.username,
-              name: findUser.name,
-            });
+            res
+              .cookie("token", token, {
+                httpOnly: true,
+                sameSite: "none",
+                secure: true,
+              })
+              .json({
+                id: findUser._id,
+                username: findUser.username,
+                name: findUser.name,
+              });
           }
         );
+      } else {
+        return res.status(400).json({ message: "Invalid credentials" });
       }
     }
   } catch (err) {
@@ -94,11 +102,18 @@ app.post("/register", async (req, res) => {
       {},
       (err, token) => {
         if (err) throw err;
-        res.cookie("token", token).status(201).json({
-          id: createdUser._id,
-          name: createdUser.name,
-          username: createdUser.username,
-        });
+        res
+          .cookie("token", token, {
+            httpOnly: true,
+            sameSite: "none",
+            secure: true,
+          })
+          .status(201)
+          .json({
+            id: createdUser._id,
+            name: createdUser.name,
+            username: createdUser.username,
+          });
       }
     );
   } catch (err) {

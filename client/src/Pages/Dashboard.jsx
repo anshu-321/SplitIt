@@ -37,6 +37,10 @@ const Dashboard = () => {
     };
 
     const fetchSpends = async () => {
+      if (username === undefined || username === null) {
+        console.error("Username is undefined or null, cannot fetch spends.");
+        return;
+      }
       try {
         const res = await axios.get(
           url + "/transactions/user/" + username + "/categories",
