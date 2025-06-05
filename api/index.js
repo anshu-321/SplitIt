@@ -541,9 +541,12 @@ app.get("/gemini/:username", async (req, res) => {
     });
     const GeminiRes = await GeminiFunction(resp, userTransaction, username);
     // console.log("Gemini Response:", GeminiRes);
-    res.json({ message: "Gemini API called successfully", data: GeminiRes });
+    return res.json({
+      message: "Gemini API called successfully",
+      data: GeminiRes,
+    });
   } catch (err) {
     console.error("Error in Gemini API:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });

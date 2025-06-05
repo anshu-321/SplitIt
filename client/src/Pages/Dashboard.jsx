@@ -56,7 +56,7 @@ const Dashboard = () => {
 
     fetchGroups();
     fetchSpends();
-    // if (summaryFromAI === "") handleAIOverview();
+    if (summaryFromAI === "") handleAIOverview();
   }, [username]);
 
   if (dataToSend.length > 0) {
@@ -117,12 +117,6 @@ const Dashboard = () => {
       </div>
 
       <div className="h-screen bg-amber-600 px-6 w-max-4xl mx-auto">
-        {/* <div className="max-w-6xl mx-auto flex flex-col px-6 pb-4 pt-6">
-          <h1 className="text-3xl font-bold text-white mb-4">Dashboard</h1>
-          <p className="text-lg text-white">Welcome, {name ? name : "User"}!</p>
-          <p className="text-lg text-white mt-2">{summaryFromAI}</p>
-        </div> */}
-
         <div className="max-w-6xl mx-auto flex flex-col items-center px-6 pb-4 pt-6">
           <div className="w-full bg-gradient-to-r from-violet-700 to-violet-500 rounded-2xl shadow-lg p-8 mb-6 flex flex-col items-center">
             <h1 className="text-4xl font-extrabold text-white mb-2 tracking-tight drop-shadow">
