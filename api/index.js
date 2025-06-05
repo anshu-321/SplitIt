@@ -127,15 +127,15 @@ app.get("/profile", (req, res) => {
   if (token) {
     jwt.verify(token, jwtSecret, {}, (err, userData) => {
       if (err) throw err;
-      res.json(userData);
+      return res.json(userData);
     });
   } else {
-    res.json("No token");
+    return res.json("No token");
   }
 });
 
 app.get("/test", (req, res) => {
-  res.json("Hello World");
+  return res.json("Hello World");
 });
 
 //----------------CREATING GROUP ------------------
@@ -144,9 +144,9 @@ app.get("/check-username/:username", async (req, res) => {
   const { username } = req.params;
   try {
     const exists = await User.exists({ username });
-    res.json({ exists: !!exists });
+    return res.json({ exists: !!exists });
   } catch (err) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -189,10 +189,13 @@ app.patch("/group/:groupId/update", async (req, res) => {
     if (!updatedGroup) {
       return res.status(404).json({ message: "Group not found" });
     }
-    res.json({ message: "Group updated successfully", group: updatedGroup });
+    return res.json({
+      message: "Group updated successfully",
+      group: updatedGroup,
+    });
   } catch (err) {
     console.error("Error updating group:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -212,10 +215,10 @@ app.get("/groups/user/:username", async (req, res) => {
 
     try {
       const groups = await Group.find({ members: username });
-      res.json(groups);
+      return res.json(groups);
     } catch (err) {
       console.log("Error fetching groups for given user:", err);
-      res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   });
 });
@@ -229,11 +232,11 @@ app.get("/group/:groupId", async (req, res) => {
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
     }
-    res.json(group);
+    return res.json(group);
     // console.log("Group fetched successfully:", group);
   } catch (err) {
     console.error("Error fetching group by ID:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -249,10 +252,10 @@ app.delete("/group/:groupId/delete", async (req, res) => {
     // delete all transactions and debts associated with this group
     await Transaction.deleteMany({ groupId }); //deleteMany deleted the groups based on groupId
     await Debt.deleteMany({ groupId });
-    res.json({ message: "Group deleted successfully" });
+    return res.json({ message: "Group deleted successfully" });
   } catch (err) {
     console.error("Error deleting group:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -298,11 +301,11 @@ app.get("/transactions/group/:groupId", async (req, res) => {
   const { groupId } = req.params;
   try {
     const transactions = await Transaction.find({ groupId });
-    res.json(transactions);
+    return res.json(transactions);
     // console.log("Transactions fetched successfully:", transactions);
   } catch (err) {
     console.error("Error fetching transactions:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -317,10 +320,10 @@ app.get("/transaction/:transactionId", async (req, res) => {
     if (!transaction) {
       return res.status(404).json({ message: "Transaction not found" });
     }
-    res.json(transaction);
+    return res.json(transaction);
   } catch (err) {
     console.error("Error fetching transaction by ID:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -356,13 +359,13 @@ app.patch("/transaction/:transactionId/edit", async (req, res) => {
       }
     });
 
-    res.json({
+    return res.json({
       message: "Transaction updated successfully",
       transaction: updatedTransaction,
     });
   } catch (err) {
     console.error("Error updating transaction:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -378,10 +381,10 @@ app.delete("/transaction/:transactionId/delete", async (req, res) => {
       return res.status(404).json({ message: "Transaction not found" });
     }
     await Debt.deleteMany({ transactionId }); // Delete all debts associated with this transaction
-    res.json({ message: "Transaction deleted successfully" });
+    return res.json({ message: "Transaction deleted successfully" });
   } catch (err) {
     console.error("Error deleting transaction:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -391,10 +394,10 @@ app.get("/debts/group/:groupId", async (req, res) => {
   const { groupId } = req.params;
   try {
     const debts = await Debt.find({ groupId });
-    res.json(debts);
+    return res.json(debts);
   } catch (err) {
     console.error("Error fetching debts:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -410,10 +413,10 @@ app.patch("/debts/:debtId/complete", async (req, res) => {
     if (!updatedDebt) {
       return res.status(404).json({ message: "Debt not found" });
     }
-    res.json(updatedDebt);
+    return res.json(updatedDebt);
   } catch (err) {
     console.error("Error completing debt:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -485,10 +488,10 @@ app.get("/transactions/:groupId/categories", async (req, res) => {
         },
       },
     ]);
-    res.json(transactions);
+    return res.json(transactions);
   } catch (err) {
     console.error("Error fetching category spends:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -496,7 +499,7 @@ app.get("/transactions/:groupId/categories", async (req, res) => {
 app.post("/logout", (req, res) => {
   checkAuth(req, res);
   res.clearCookie("token"); // Clear the cookie
-  res.json("Logged out successfully");
+  return res.json("Logged out successfully");
 });
 
 // -------------------GEMINI API -------------------
