@@ -452,10 +452,10 @@ app.get("/transactions/user/:username/categories", async (req, res) => {
         },
       },
     ]);
-    res.json(transactions);
+    return res.json(transactions);
   } catch (err) {
     console.error("Error fetching category spends:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
