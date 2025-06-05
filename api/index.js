@@ -132,7 +132,6 @@ app.get("/profile", (req, res) => {
       return res.json(userData);
     });
   } else {
-    if (err) return res.status(401).json({ message: "Unauthorized" });
     return res.json("No token");
   }
 });
