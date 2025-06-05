@@ -24,25 +24,17 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-const cors = require("cors");
-
 const allowedOrigins = [
   "https://splitit-frontend.onrender.com",
   "http://localhost:5173",
 ];
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
+);
 
 function checkAuth(req, res) {
   const token = req.cookies?.token;
@@ -65,17 +57,11 @@ app.post("/login", async (req, res) => {
           {},
           (err, token) => {
             if (err) throw err;
-            res
-              .cookie("token", token, {
-                httpOnly: true,
-                secure: true,
-                sameSite: "None",
-              })
-              .json({
-                id: findUser._id,
-                username: findUser.username,
-                name: findUser.name,
-              });
+            res.cookie("token", token).json({
+              id: findUser._id,
+              username: findUser.username,
+              name: findUser.name,
+            });
           }
         );
       }
