@@ -52,7 +52,7 @@ const Dashboard = () => {
 
     fetchGroups();
     fetchSpends();
-    if (summaryFromAI === "") handleAIOverview();
+    // if (summaryFromAI === "") handleAIOverview();
   }, [username]);
 
   if (dataToSend.length > 0) {
