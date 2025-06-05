@@ -14,15 +14,16 @@ const LoginPage = () => {
     setId,
     setUsername: setUserNameContext,
     setName: setNameContext,
+    url,
   } = useContext(UserContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = isRegister ? "/register" : "/login";
+    const urlEndpoint = isRegister ? "/register" : "/login";
     try {
       const { data } = await axios.post(
-        "http://localhost:4000" + url,
+        url + urlEndpoint,
         {
           name,
           username,
@@ -46,7 +47,7 @@ const LoginPage = () => {
   };
   useEffect(() => {
     axios
-      .get("http://localhost:4000/profile", { withCredentials: true })
+      .get(url + "/profile", { withCredentials: true })
       .then((res) => {
         if (res.data && res.data.username) {
           navigate("/dashboard");

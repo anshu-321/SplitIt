@@ -6,7 +6,7 @@ import { UserContext } from "../UserContext";
 import CategoryPieChart from "../Components/PiChart";
 
 const GroupExpensePage = () => {
-  const { username } = useContext(UserContext);
+  const { username, url } = useContext(UserContext);
   const { groupId } = useParams();
   const [group, setGroup] = React.useState(null);
   const [error, setError] = React.useState("");
@@ -18,12 +18,9 @@ const GroupExpensePage = () => {
 
   const fetchDebts = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:4000/debts/group/" + groupId,
-        {
-          withCredentials: true,
-        }
-      );
+      const res = await axios.get(url + "/debts/group/" + groupId, {
+        withCredentials: true,
+      });
       const userOwes = res.data.filter((debt) => debt.to === username);
       setDebts(userOwes);
       console.log("Fetched debts:", userOwes);
@@ -35,11 +32,7 @@ const GroupExpensePage = () => {
 
   function clearDebt(debtId) {
     axios
-      .patch(
-        `http://localhost:4000/debts/${debtId}/complete`,
-        {},
-        { withCredentials: true }
-      )
+      .patch(url + `/debts/${debtId}/complete`, {}, { withCredentials: true })
       .then(() => {
         fetchDebts();
       })
@@ -52,7 +45,7 @@ const GroupExpensePage = () => {
   useEffect(() => {
     const fetchGroupMembers = async () => {
       try {
-        const res = await axios.get(`http://localhost:4000/group/${groupId}`, {
+        const res = await axios.get(url + `/group/${groupId}`, {
           withCredentials: true,
         });
         setGroup(res.data);
@@ -64,10 +57,9 @@ const GroupExpensePage = () => {
 
     const fetchGroupTransactions = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:4000/transactions/group/" + groupId,
-          { withCredentials: true }
-        );
+        const res = await axios.get(url + "/transactions/group/" + groupId, {
+          withCredentials: true,
+        });
         setTransactions(res.data);
       } catch (err) {
         console.error("Error fetching transactions:", err);
@@ -78,7 +70,7 @@ const GroupExpensePage = () => {
     const fetchGroupTransactionsCategories = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:4000/transactions/" + groupId + "/categories",
+          url + "/transactions/" + groupId + "/categories",
           { withCredentials: true }
         );
         setDataToSend(res.data);
@@ -114,12 +106,9 @@ const GroupExpensePage = () => {
 
   const handleTransactionDelete = async (transactionId) => {
     try {
-      await axios.delete(
-        "http://localhost:4000/transaction/" + transactionId + "/delete",
-        {
-          withCredentials: true,
-        }
-      );
+      await axios.delete(url + "/transaction/" + transactionId + "/delete", {
+        withCredentials: true,
+      });
       alert("Expense deleted successfully.");
       navigate("/dashboard");
     } catch (err) {

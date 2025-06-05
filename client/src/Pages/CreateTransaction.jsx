@@ -6,7 +6,7 @@ import Header from "../Components/Header";
 
 const CreateTransaction = () => {
   const { groupId, transactionId } = useParams();
-  const { user } = useContext(UserContext);
+  const { user, url } = useContext(UserContext);
   const [groupMembers, setGroupMembers] = useState([]);
   const [paidBy, setPaidBy] = useState("");
   const [amount, setAmount] = useState("");
@@ -37,7 +37,7 @@ const CreateTransaction = () => {
   useEffect(() => {
     // Fetch group details to get member list
     const fetchGroup = async () => {
-      const res = await axios.get(`http://localhost:4000/group/${groupId}`, {
+      const res = await axios.get(url + `/group/${groupId}`, {
         withCredentials: true,
       });
       setGroupMembers(res.data.members);
@@ -45,10 +45,9 @@ const CreateTransaction = () => {
 
     const fetchTransaction = async () => {
       if (isEdit) {
-        const res = await axios.get(
-          `http://localhost:4000/transaction/${transactionId}`,
-          { withCredentials: true }
-        );
+        const res = await axios.get(url + `/transaction/${transactionId}`, {
+          withCredentials: true,
+        });
         const transaction = res.data;
         setPaidBy(transaction.paidBy);
         setAmount(transaction.amount.toString());
@@ -78,7 +77,7 @@ const CreateTransaction = () => {
     if (isEdit) {
       try {
         await axios.patch(
-          "http://localhost:4000/transaction/" + transactionId + "/edit",
+          url + "/transaction/" + transactionId + "/edit",
           {
             groupId,
             paidBy,
@@ -97,7 +96,7 @@ const CreateTransaction = () => {
     } else {
       try {
         await axios.post(
-          `http://localhost:4000/create-transaction`,
+          url + `/create-transaction`,
           {
             groupId,
             paidBy,

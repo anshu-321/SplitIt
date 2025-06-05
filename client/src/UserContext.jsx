@@ -7,10 +7,11 @@ export function UserContextProvider({ children }) {
   const [name, setName] = useState(null);
   const [username, setUsername] = useState(null);
   const [id, setId] = useState(null);
+  const url = "https://splitit-server-zx1r.onrender.com";
 
   useEffect(() => {
     axios
-      .get("http://localhost:4000/profile", { withCredentials: true })
+      .get(url + "/profile", { withCredentials: true })
       .then((res) => {
         if (res.data && res.data.username) {
           setId(res.data.userId);
@@ -25,7 +26,7 @@ export function UserContextProvider({ children }) {
 
   return (
     <UserContext.Provider
-      value={{ username, setUsername, id, setId, name, setName }}
+      value={{ username, setUsername, id, setId, name, setName, url }}
     >
       {children}
     </UserContext.Provider>

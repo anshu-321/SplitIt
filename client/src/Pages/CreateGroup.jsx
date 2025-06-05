@@ -5,7 +5,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "../Components/Header";
 
 const CreateGroup = () => {
-  const { username: currentUsername, id } = useContext(UserContext);
+  const { username: currentUsername, id, url } = useContext(UserContext);
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("Active");
@@ -19,7 +19,7 @@ const CreateGroup = () => {
   useEffect(() => {
     const fetchCurrInfo = async () => {
       if (isEdit) {
-        const res = await axios.get("http://localhost:4000/group/" + groupId, {
+        const res = await axios.get(url + "/group/" + groupId, {
           withCredentials: true,
         });
         const { name, description, status, members } = res.data;
@@ -49,9 +49,7 @@ const CreateGroup = () => {
       return;
     }
     try {
-      const res = await axios.get(
-        `http://localhost:4000/check-username/${trimmed}`
-      );
+      const res = await axios.get(url + `/check-username/${trimmed}`);
       const { exists } = res.data;
 
       if (exists) {
@@ -77,7 +75,7 @@ const CreateGroup = () => {
     if (isEdit) {
       try {
         await axios.patch(
-          `http://localhost:4000/group/${groupId}/update`,
+          url + `/group/${groupId}/update`,
           {
             name: groupName,
             description,
@@ -100,7 +98,7 @@ const CreateGroup = () => {
     } else {
       try {
         const res = await axios.post(
-          "http://localhost:4000/create-group",
+          url + "/create-group",
           {
             name: groupName,
             description,

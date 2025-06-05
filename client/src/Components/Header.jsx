@@ -11,6 +11,7 @@ const Header = () => {
   const onLogo = () => {
     navigate("/");
   };
+  const { url } = useContext(UserContext);
 
   const clickOnce = () => {
     if (!isLogout) {
@@ -23,7 +24,7 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      const res = await axios.post("http://localhost:4000/logout", {
+      const res = await axios.post(url + "/logout", {
         withCredentials: true,
       });
       console.log("Logout response:", res);

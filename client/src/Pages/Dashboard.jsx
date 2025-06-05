@@ -8,7 +8,7 @@ import CategoryPieChart from "../Components/PiChart";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { id, name, username } = useContext(UserContext);
+  const { id, name, username, url } = useContext(UserContext);
   const [userGroups, setUserGroups] = useState(undefined);
   const [dataToSend, setDataToSend] = useState([]);
   const [summaryFromAI, setSummaryFromAI] = useState("");
@@ -26,12 +26,9 @@ const Dashboard = () => {
       }
       try {
         // console.log("Fetching groups for user:", username);
-        const res = await axios.get(
-          `http://localhost:4000/groups/user/${username}`,
-          {
-            withCredentials: true,
-          }
-        );
+        const res = await axios.get(url + `/groups/user/${username}`, {
+          withCredentials: true,
+        });
         setUserGroups(res.data);
         // console.log("User Groups:", res.data, typeof res.data);
       } catch (err) {
@@ -42,7 +39,7 @@ const Dashboard = () => {
     const fetchSpends = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:4000/transactions/user/" + username + "/categories",
+          url + "/transactions/user/" + username + "/categories",
           {
             withCredentials: true,
           }
@@ -55,7 +52,7 @@ const Dashboard = () => {
 
     fetchGroups();
     fetchSpends();
-    handleAIOverview();
+    if (summaryFromAI === "") handleAIOverview();
   }, [username]);
 
   if (dataToSend.length > 0) {
@@ -68,7 +65,7 @@ const Dashboard = () => {
 
   const handleGroupDelete = async (groupId) => {
     try {
-      await axios.delete("http://localhost:4000/group/" + groupId + "/delete", {
+      await axios.delete(url + "/group/" + groupId + "/delete", {
         withCredentials: true,
       });
       setUserGroups((prevGroups) =>
@@ -84,7 +81,7 @@ const Dashboard = () => {
 
   const handleAIOverview = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/gemini/" + username, {
+      const res = await axios.get(url + "/gemini/" + username, {
         withCredentials: true,
       });
       setSummaryFromAI(res.data.data);
