@@ -29,18 +29,20 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: allowedOrigins,
     credentials: true,
   })
 );
 app.use(cookieParser());
 app.use(express.json());
 
-function checkAuth(req, res) {
+function checkAuth(req, res, next) {
   const token = req.cookies?.token;
   if (!token) return res.status(401).json({ message: "Unauthorized" });
-  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+  jwt.verify(token, jwtSecret, {}, (err, userData) => {
     if (err) return res.status(401).json({ message: "Unauthorized" });
+    req.user = userData;
+    next();
   });
 }
 
@@ -130,6 +132,7 @@ app.get("/profile", (req, res) => {
       return res.json(userData);
     });
   } else {
+    if (err) return res.status(401).json({ message: "Unauthorized" });
     return res.json("No token");
   }
 });
@@ -177,8 +180,7 @@ app.post("/create-group", async (req, res) => {
 });
 
 // Updating the group based on groupId
-app.patch("/group/:groupId/update", async (req, res) => {
-  checkAuth(req, res);
+app.patch("/group/:groupId/update", checkAuth, async (req, res) => {
   const { groupId } = req.params;
   const updateFields = req.body;
 
@@ -224,9 +226,7 @@ app.get("/groups/user/:username", async (req, res) => {
 });
 
 // - ---------------- FETCHING THE GROUPS BASED ON GROUP ID -------------------
-app.get("/group/:groupId", async (req, res) => {
-  checkAuth(req, res);
-
+app.get("/group/:groupId", checkAuth, async (req, res) => {
   try {
     const group = await Group.findById(req.params.groupId);
     if (!group) {
@@ -241,8 +241,7 @@ app.get("/group/:groupId", async (req, res) => {
 });
 
 // DELETING A GROUP ----
-app.delete("/group/:groupId/delete", async (req, res) => {
-  checkAuth(req, res);
+app.delete("/group/:groupId/delete", checkAuth, async (req, res) => {
   const { groupId } = req.params;
   try {
     const deletedGroup = await Group.findByIdAndDelete(groupId);
@@ -260,8 +259,7 @@ app.delete("/group/:groupId/delete", async (req, res) => {
 });
 
 //------------------ CREATING A TRANSACTION AND MAINTING THE DEBTS-------------------
-app.post("/create-transaction", async (req, res) => {
-  checkAuth(req, res);
+app.post("/create-transaction", checkAuth, async (req, res) => {
   const { groupId, paidBy, amount, description, splitBetween, category } =
     req.body;
   try {
@@ -296,8 +294,7 @@ app.post("/create-transaction", async (req, res) => {
 });
 
 //getting all transactions for a specific group
-app.get("/transactions/group/:groupId", async (req, res) => {
-  checkAuth(req, res);
+app.get("/transactions/group/:groupId", checkAuth, async (req, res) => {
   const { groupId } = req.params;
   try {
     const transactions = await Transaction.find({ groupId });
@@ -312,8 +309,7 @@ app.get("/transactions/group/:groupId", async (req, res) => {
 const server = app.listen(PORT);
 
 //FETCHING A TRANSACTION BY ID
-app.get("/transaction/:transactionId", async (req, res) => {
-  checkAuth(req, res);
+app.get("/transaction/:transactionId", checkAuth, async (req, res) => {
   const { transactionId } = req.params;
   try {
     const transaction = await Transaction.findById(transactionId);
@@ -328,8 +324,7 @@ app.get("/transaction/:transactionId", async (req, res) => {
 });
 
 //UPDATING A TRANSACTION
-app.patch("/transaction/:transactionId/edit", async (req, res) => {
-  checkAuth(req, res);
+app.patch("/transaction/:transactionId/edit", checkAuth, async (req, res) => {
   const { transactionId } = req.params;
   const updatedFields = req.body;
   try {
@@ -370,27 +365,29 @@ app.patch("/transaction/:transactionId/edit", async (req, res) => {
 });
 
 //------------------ DELETING A TRANSACTION -------------------
-app.delete("/transaction/:transactionId/delete", async (req, res) => {
-  checkAuth(req, res);
-  const { transactionId } = req.params;
-  try {
-    const deletedTransaction = await Transaction.findByIdAndDelete(
-      transactionId
-    );
-    if (!deletedTransaction) {
-      return res.status(404).json({ message: "Transaction not found" });
+app.delete(
+  "/transaction/:transactionId/delete",
+  checkAuth,
+  async (req, res) => {
+    const { transactionId } = req.params;
+    try {
+      const deletedTransaction = await Transaction.findByIdAndDelete(
+        transactionId
+      );
+      if (!deletedTransaction) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+      await Debt.deleteMany({ transactionId }); // Delete all debts associated with this transaction
+      return res.json({ message: "Transaction deleted successfully" });
+    } catch (err) {
+      console.error("Error deleting transaction:", err);
+      return res.status(500).json({ message: "Internal server error" });
     }
-    await Debt.deleteMany({ transactionId }); // Delete all debts associated with this transaction
-    return res.json({ message: "Transaction deleted successfully" });
-  } catch (err) {
-    console.error("Error deleting transaction:", err);
-    return res.status(500).json({ message: "Internal server error" });
   }
-});
+);
 
 //------------------ DEBTS -------------------
-app.get("/debts/group/:groupId", async (req, res) => {
-  checkAuth(req, res);
+app.get("/debts/group/:groupId", checkAuth, async (req, res) => {
   const { groupId } = req.params;
   try {
     const debts = await Debt.find({ groupId });
@@ -401,8 +398,7 @@ app.get("/debts/group/:groupId", async (req, res) => {
   }
 });
 
-app.patch("/debts/:debtId/complete", async (req, res) => {
-  checkAuth(req, res);
+app.patch("/debts/:debtId/complete", checkAuth, async (req, res) => {
   const { debtId } = req.params;
   try {
     const updatedDebt = await Debt.findByIdAndUpdate(
@@ -422,49 +418,51 @@ app.patch("/debts/:debtId/complete", async (req, res) => {
 
 // -------------------FETCHING THE SUM OF SPENDS FOR A USER IN A CATEGORY -------------
 
-app.get("/transactions/user/:username/categories", async (req, res) => {
-  checkAuth(req, res);
-  const { username } = req.params;
-  try {
-    const transactions = await Transaction.aggregate([
-      { $match: { splitBetween: username } }, // only includes transaction where user is involved
+app.get(
+  "/transactions/user/:username/categories",
+  checkAuth,
+  async (req, res) => {
+    const { username } = req.params;
+    try {
+      const transactions = await Transaction.aggregate([
+        { $match: { splitBetween: username } }, // only includes transaction where user is involved
 
-      // Add a field to calculate user share
-      {
-        $addFields: {
-          userShare: {
-            $divide: ["$amount", { $size: "$splitBetween" }],
+        // Add a field to calculate user share
+        {
+          $addFields: {
+            userShare: {
+              $divide: ["$amount", { $size: "$splitBetween" }],
+            },
           },
         },
-      },
 
-      // Group by category and sum the user share
-      {
-        $group: {
-          _id: "$category",
-          totalAmount: { $sum: "$userShare" },
+        // Group by category and sum the user share
+        {
+          $group: {
+            _id: "$category",
+            totalAmount: { $sum: "$userShare" },
+          },
         },
-      },
 
-      // Project the result to include category and total amount
-      {
-        $project: {
-          category: "$_id",
-          totalAmount: 1,
-          _id: 0,
+        // Project the result to include category and total amount
+        {
+          $project: {
+            category: "$_id",
+            totalAmount: 1,
+            _id: 0,
+          },
         },
-      },
-    ]);
-    return res.json(transactions);
-  } catch (err) {
-    console.error("Error fetching category spends:", err);
-    return res.status(500).json({ message: "Internal server error" });
+      ]);
+      return res.json(transactions);
+    } catch (err) {
+      console.error("Error fetching category spends:", err);
+      return res.status(500).json({ message: "Internal server error" });
+    }
   }
-});
+);
 
 // -------------------FETCHING THE SUM OF SPENDS FOR A GROUP -------------
-app.get("/transactions/:groupId/categories", async (req, res) => {
-  checkAuth(req, res);
+app.get("/transactions/:groupId/categories", checkAuth, async (req, res) => {
   const { groupId } = req.params;
   const groupObjectId = new mongoose.Types.ObjectId(groupId);
   try {
@@ -496,8 +494,7 @@ app.get("/transactions/:groupId/categories", async (req, res) => {
 });
 
 // -------------------LOGOUT -------------------
-app.post("/logout", (req, res) => {
-  checkAuth(req, res);
+app.post("/logout", checkAuth, (req, res) => {
   res.clearCookie("token"); // Clear the cookie
   return res.json("Logged out successfully");
 });
@@ -533,8 +530,7 @@ async function GeminiFunction(userDebt, userTransaction, username) {
   return response.text;
 }
 
-app.get("/gemini/:username", async (req, res) => {
-  checkAuth(req, res);
+app.get("/gemini/:username", checkAuth, async (req, res) => {
   const { username } = req.params;
   try {
     const resp = await Debt.find({ to: req.params.username, tag: "active" });
